@@ -3,8 +3,14 @@
 https://github.com/Team-Code/KA_Offline -->
 <html>
  <head>
-    <title>The land of hope [GAME]</title>
+    <title>Processing.JS inside Webpages: Template</title>
 </head>
+ <style>
+     #INFO {
+        font-family: Times New Roman;
+        font-size: 15px;
+     }
+ </style>
  <body>
     <p align="center">
 	<!--This draws the Canvas on the webpage -->
@@ -30,7 +36,7 @@ https://github.com/Team-Code/KA_Offline -->
  *
 **********/
 angleMode = "DEGREES";
-frameRate(60);
+
 var screen = "load";
 smooth();
 var keys = [];
@@ -1001,7 +1007,8 @@ function Water(x, y) {
         if (rectCollide(this, player)) {
             player.swimTimer -= 0.35;
             if (spaceCounts[1] <= 1) {
-                popUp = new showAchievement("swimmer!", 0);
+                popUp = new showAchievement(achievements[5], 0);
+                achievements[5].earned = true;
             }
             player.grav = 0;
             player.vy = 1;
@@ -2864,6 +2871,17 @@ mousePressed = function() {
         unlockedLevel[lvl] = true;
     }
     }
+    if (screen === "beatTestLevel") {
+       if (buttons[26].over()) {
+           player.reset();
+           mapFill(testMap);
+       }
+    }
+    if (screen === "beatAllLevels") {
+       if (buttons[20].over()) {
+           player.reset();
+       }
+    }
     if (screen === "beatCustomLevel") {
         if (buttons[17].over()) {
             clvl++;
@@ -2968,5 +2986,8 @@ draw = function() {
     // Pass the function sketchProc (defined in myCode.js) to Processing's constructor.
     var processingInstance = new Processing(canvas, sketchProc);
  </script>
+<p id="INFO">
+    All the code and references of this game can be found <a href="https://github.com/dengkevin456/dengkevin456.github.io/edit/main/index.html">here</a><br>
 
+</p>
 </html>
