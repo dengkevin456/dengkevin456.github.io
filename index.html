@@ -623,6 +623,48 @@ var players = [
             popMatrix();
         }
     },
+	{
+        name: "Banger",
+        description: "The reload is extremely fast,\nlike a machine gun!",
+        x: 0,
+        y: 0,
+        ox: 0,
+        oy: 0,
+        w: bs,
+        h: bs,
+        price: 50,
+        haveBought: false,
+        canShoot: true,
+        reloadSpeed: 0.9,
+        bulletSpeed: 10,
+        jumpV: -10,
+        origJumps: 1,
+        jumps: 1,
+        health: 100,
+        origHealth: 100,
+        vx: 0,
+        vy: 0,
+        speed: 0.25,
+        maxSpeed: 5,
+        swimTimer: 300,
+        origswimTimer: 300,
+        draw: function() {
+            pushMatrix();
+            noStroke();
+            translate(300, 300);
+            fill(90);
+            rect(0, 0, 30, 30);
+            popMatrix();
+        },
+        display: function() {
+            pushMatrix();
+            translate(this.x, this.y);
+            noStroke();
+            fill(90);
+            rect(0, 0, this.w, this.h);
+            popMatrix();
+        }
+    },
 ];
 
 var gameMap = [
