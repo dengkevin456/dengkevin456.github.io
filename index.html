@@ -35,7 +35,7 @@ https://github.com/Team-Code/KA_Offline -->
  * Credit to
  *
 **********/
-angleMode = "DEGREES";
+angleMode = degrees;
 
 var screen = "load";
 smooth();
@@ -632,20 +632,20 @@ var players = [
         oy: 0,
         w: bs,
         h: bs,
-        price: 50,
+        price: 0,
         haveBought: false,
         canShoot: true,
         reloadSpeed: 0.9,
-        bulletSpeed: 10,
+        bulletSpeed: 5,
         jumpV: -10,
         origJumps: 1,
         jumps: 1,
-        health: 100,
-        origHealth: 100,
+        health: 150,
+        origHealth: 150,
         vx: 0,
         vy: 0,
         speed: 0.25,
-        maxSpeed: 5,
+        maxSpeed: 3,
         swimTimer: 300,
         origswimTimer: 300,
         draw: function() {
@@ -735,12 +735,20 @@ var gameMap = [
         "-----------------------------------",
         "-----------------------------------",
         "-----------------------------------",
-        "@------------#------#--------#------",
+        "-----------------------------------",
+        "-----------------------------------",
+        "-----------------------------------",
+        "-----------------------------------",
+        "-----------------------------------",
+        "-----------------------------------",
+        "-----------------------------------",
+        "-----------------------------------",
+        "-----------------------------------",
+        "-----------------------------------",
+        "-----------------------------------",
+        "-----------------------------------",
+        "@------------#------#--------#-----",
         "bffffffffffffffffffffffffffffffffbp",
-        "-----------------------------------",
-        "-----------------------------------",
-        "-----------------------------------",
-        "-----------------------------------",
     ],
     [
         "---------------------------------pp",
@@ -1025,6 +1033,11 @@ fallBlock.prototype.update = function() {
         this.y += this.vy;
         this.vy += this.grav;
     }
+    for (var i in bullets) {
+        if (circleCollide(bullets[i], this)) {
+            bullets.splice(i, 1);
+        }
+    }
 };
 
 var blocks = [];
@@ -1049,7 +1062,7 @@ function Water(x, y) {
         if (rectCollide(this, player)) {
             player.swimTimer -= 0.35;
             if (spaceCounts[1] <= 1) {
-                popUp = new showAchievement(achievements[5], 0);
+                popUp = new showAchievement(achievements[5].name, 0);
                 achievements[5].earned = true;
             }
             player.grav = 0;
@@ -1279,6 +1292,7 @@ Portal.prototype.draw = function() {
     fill(200 - sin(frameCount) * 55, 200 - cos(frameCount) * 55, 200 + sin(frameCount) * 55);
     rect(this.x, this.y, this.w, this.h);
     if (rectCollide(player, this)) {
+
         if (screen === "playScreen") {
             if (lvl < gameMap.length - 1) {
         screen = "beatLevel";
@@ -1286,6 +1300,8 @@ Portal.prototype.draw = function() {
             else {
                 screen = "beatAllLevels";
             }
+            //Give money when you passed the level depends on the difficulty
+    money += (lvl * lvl + 5);
         }
         else if (screen === "customLevelsScreen") {
             if (clvl < customMap.length - 1) {
@@ -1419,7 +1435,8 @@ Player.prototype.update = function() {
     if (this.health <= 0) {
         mapFill(gameMap[lvl]);
     }
-    if (this.y > gameMap[lvl].length*bs + 1200) {
+    if (this.y > gameMap[lvl].length*bs + 1500) {
+
         this.health -= 20;
     }
 };
@@ -2164,7 +2181,7 @@ function testScreen() {
     cam.y = ~~lerp(cam.y, height/2 - player.y, 0.1);
     cam.x = constrain(cam.x, -1200, 0);
     cam.y = constrain(cam.y, -1800, 200);
-    player.x = constrain(player.x, 0, mapLength * 30);
+    player.x = constrain(player.x, 0, testMap[0] * 30 - player.w);
     fill(255, 0, 0, transparency);
     textSize(30);
     text(Text.title.join(""), 300, 280);
@@ -2535,9 +2552,9 @@ function customLevelsScreen() {
     gameBackground();
     cam.x = ~~(lerp(cam.x, width/2 - player.x, 0.1));
     cam.y = ~~lerp(cam.y, height/2 - player.y, 0.1);
-    cam.x = constrain(cam.x, -1200, customMap[lvl].length * -1);
-    cam.y = constrain(cam.y, -1800, 200);
-    player.x = constrain(player.x, 0, 10000);
+    cam.x = constrain(cam.x, customMap[clvl].map[0].length* -1 * bs + 600, 0);
+    cam.y = constrain(cam.y, customMap[clvl].map.length * -1 * bs + 600, 200);
+    player.x = constrain(player.x, 0, customMap[clvl].map[0].length * bs - player.w);
     fill(255, 0, 0, transparency);
     textSize(30);
     text(customMap[clvl].title, 300, 280);
@@ -2565,12 +2582,9 @@ function customLevelsScreen() {
     for (var i in bullets) {
         bullets[i].draw();
         bullets[i].update();
-        if (bullets[i].y > 1500 || bullets[i].x < 0 || bullets[i].x > 10000 || bullets[i].y < 0) {
-            bullets.splice(i, 1);
-        }
         if (bullets[i].x - 5 > player.x && bullets[i].x + 5 < player.x + player.w && bullets[i].y - 5 > player.y && bullets[i].y + 5 < player.y + player.h) {
             player.health -= 4;
-            bullets[i].x = 10000;
+            //bullets[i].x = 10000;
             bullets.splice(i, 1);
         }
 
@@ -2625,9 +2639,9 @@ function playScreen() {
     gameBackground();
     cam.x = ~~(lerp(cam.x, width/2 - player.x, 0.1));
     cam.y = ~~lerp(cam.y, height/2 - player.y, 0.1);
-    cam.x = constrain(cam.x, -1200, 0);
+    cam.x = constrain(cam.x, gameMap[lvl][0].length* -1 * 30 + 600, 0);
     cam.y = constrain(cam.y, -1800, 200);
-    player.x = constrain(player.x, 0, 10000);
+    player.x = constrain(player.x, 0, gameMap[lvl][0].length * 30 - player.w);
     var angle = Math.PI - atan2((cam.y + player.y) - mouseY, (cam.x + player.x) - mouseX);
     stroke(255, 0, 0);
     strokeWeight(2);
@@ -2695,7 +2709,7 @@ function playScreen() {
     for (var i in fallblocks) {
         fallblocks[i].draw();
         fallblocks[i].update();
-        if (player.health <= 1 || keys[82]) {
+        if (player.health <= 0 || keys[82]) {
             fallblocks[i].reset();
         }
     }
@@ -2707,10 +2721,6 @@ function playScreen() {
             bullets.splice(i, 1);
         }
 
-    }
-    for (var i in player.bullets) {
-        player.bullets[i].draw();
-        player.bullets[i].update();
     }
     for (var i in f) {
         f[i].draw();
@@ -2769,6 +2779,7 @@ function playScreen() {
     fill(0);
     textSize(25);
     text("Health: " + round(player.health), 300, 50);
+    text("Money: " + round(money) + "$", 300, 150);
     rectMode(CORNER);
     //Draw swimming bar
     fill(0, 255, 217);
@@ -2857,7 +2868,7 @@ function Game() {
     clicked = false;
     }
     catch(e) {
-       // println(e);
+        println(e);
     }
 }
 
@@ -2922,6 +2933,7 @@ mousePressed = function() {
     if (screen === "beatAllLevels") {
        if (buttons[20].over()) {
            player.reset();
+           mapFill(gameMap[lvl]);
        }
     }
     if (screen === "beatCustomLevel") {
@@ -2957,7 +2969,7 @@ mousePressed = function() {
     if (screen === "customPauseScreen") {
         if (buttons[16].over()) {
             player.reset();
-            mapFill(customMap[lvl].map);
+            mapFill(customMap[clvl].map);
         }
     }
     if (screen === "beatAllCustomLevels") {
@@ -2966,7 +2978,7 @@ mousePressed = function() {
             clvl = 0;
             bullets.splice(0, bullets.length);
             particles.splice(0, particles.length);
-            mapFill(customMap[lvl].map);
+            mapFill(customMap[clvl].map);
         }
     }
     }
