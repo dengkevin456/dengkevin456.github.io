@@ -37,7 +37,7 @@ https://github.com/Team-Code/KA_Offline -->
 **********/
 angleMode = degrees;
 
-var screen = "load";
+var screen = "mainMenu";
 smooth();
 var keys = [];
 var bs = 30;
@@ -144,6 +144,7 @@ var howMessages = [
     "1) Basic player movements\n\n1. Use Left/Right to move\n2. Use up to jump\n3. Left-click to shoot (if you can shoot)",
     "2) Creating stages\n\n1. Click the create button\n2. Click to place it\n3. Right-click on (...) to have access\nto more blocks and\nwrite your name and the title.\n4. Press SPACE to get code and\npost it to T&T\n5. In a short time, your created level will\nbe in the custom levels.\n6. IMPORTANT, only put the player\n(red figure) ONE TIME!!!",
     "3) Shopping\n\n1. Go to the shop\n2. Press RIGHT/LEFT to\nbrowse through items\n3. The more money you have, the\nmore items you can get.",
+    "4) Achievements\n\n1. Go to \"all achievements\"\n2. Press RIGHT/LEFT to\nbrowse through\n3. The more the achievement is hard,\nthe more you will earn more money",
 ];
 
 var tips = [
@@ -550,7 +551,7 @@ var players = [
         oy: 0,
         w: bs,
         h: bs,
-        price: 0,
+        price: 10,
         haveBought: false,
         jumpV: -10,
         origJumps: 1,
@@ -632,7 +633,7 @@ var players = [
         oy: 0,
         w: bs,
         h: bs,
-        price: 0,
+        price: 20,
         haveBought: false,
         canShoot: true,
         reloadSpeed: 0.9,
@@ -1696,6 +1697,7 @@ var buttons = [
     new Button(300, 450, 104, "Quit", "optionsScreen"), // 25
     new Button(300, 300, 104, "Back", "optionsScreen"),
     new Button(100, 320, 104, "Settings", "settingsScreen"),
+    new Button(500, 320, 104, "Upgrades", "upgradesScreen"),
 ];
 
 var toggleButtons = [
@@ -1760,6 +1762,7 @@ function mainMenu() {
     textSize(20);
     buttons[13].draw();
     buttons[27].draw();
+    buttons[28].draw();
     textSize(13);
     buttons[21].draw();
 }
@@ -2148,6 +2151,11 @@ function optionsScreen() {
     buttons[22].draw();
 }
 
+function upgradesScreen() {
+    gameBackground();
+    buttons[1].draw();
+}
+
 function testPauseScreen() {
     stroke(0);
     strokeWeight(5);
@@ -2477,6 +2485,8 @@ function instructions() {
     fill(255, 0, 0);
     text("Instructions", 300, 60);
     textSize(20);
+    fill(255, 0, 0);
+    text("Press right arrow to\ngo to the next slide", 300, 150);
     fill(0);
     pushMatrix();
     translate(howTrans, 0);
@@ -2858,6 +2868,9 @@ function Game() {
         break;
         case "settingsScreen":
             settingsScreen();
+        break;
+        case "upgradesScreen":
+           upgradesScreen();
         break;
     }
     if (screen === "beatLevel") {
