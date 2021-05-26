@@ -37,7 +37,7 @@ https://github.com/Team-Code/KA_Offline -->
 **********/
 angleMode = degrees;
 
-var screen = "load";
+var screen = "mainMenu";
 smooth();
 var keys = [];
 var bs = 30;
@@ -666,6 +666,17 @@ var players = [
             popMatrix();
         }
     },
+];
+
+
+var upgrades = [
+   {
+       name: "Money multiplier",
+       mult: 1.25,
+   },
+   {
+
+   },
 ];
 
 var gameMap = [
@@ -2153,6 +2164,8 @@ function optionsScreen() {
 
 function upgradesScreen() {
     gameBackground();
+    fill(0);
+
     buttons[1].draw();
 }
 
@@ -2187,9 +2200,9 @@ function testScreen() {
     text("Angle from the player to mouse: " + round(angle), 300, 100);
     cam.x = ~~(lerp(cam.x, width/2 - player.x, 0.1));
     cam.y = ~~lerp(cam.y, height/2 - player.y, 0.1);
-    cam.x = constrain(cam.x, -1200, 0);
+    cam.x = constrain(cam.x, testMap[0].length * bs * -1 + 600, 0);
     cam.y = constrain(cam.y, -1800, 200);
-    player.x = constrain(player.x, 0, testMap[0] * 30 - player.w);
+    player.x = constrain(player.x, 0, testMap[0].length * bs - player.w);
     fill(255, 0, 0, transparency);
     textSize(30);
     text(Text.title.join(""), 300, 280);
