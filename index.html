@@ -330,7 +330,12 @@ function showAchievement(achievement, timer) {
             fill(0);
             textSize(25);
             if (!this.showed) {
+                    if (Text.username.join("") === "") {
                     text("Unknown" + stuff.message + "\n"+ this.achievement, 300, this.y - 25);
+                    }
+                    else {
+                    text(Text.username.join("") + stuff.message + "\n" + this.achievement, 300, this.y - 25);
+                    }
             }
             if (this.timer < 25) {
                 this.y = this.timer * 2;
@@ -498,7 +503,7 @@ function lock(x, y) {
     triangle(x + 15, y + 10, x + 10, y + 20, x + 20, y + 20);
     stroke(135);
     noFill();
-    arc(x + 15, y, 16, 18, 181, 360);
+    arc(x + 15, y, 16, 18, 181 * Math.PI / 180, Math.PI * 2);
 }
 
 var players = [
@@ -672,10 +677,15 @@ var players = [
 var upgrades = [
    {
        name: "Money multiplier",
-       mult: 1.25,
+       mult: 1,
+       pm: 2,
+       price: 1,
    },
    {
-
+       name: "Decrease\nbullet damage",
+       mult: 1,
+       pm: 2,
+       price: 5,
    },
 ];
 
@@ -1313,7 +1323,7 @@ Portal.prototype.draw = function() {
                 screen = "beatAllLevels";
             }
             //Give money when you passed the level depends on the difficulty
-    money += (lvl * lvl + 5);
+    money += (lvl * lvl + 5) * upgrades[0].mult;
         }
         else if (screen === "customLevelsScreen") {
             if (clvl < customMap.length - 1) {
@@ -1591,6 +1601,19 @@ monster.prototype.update = function() {
 };
 
 var start = true;
+
+function addButton(x, y, w) {
+    if (Over(x, y, w, w)) {
+        fill(0, 245, 0);
+        cursor(HAND);
+    }
+    else {
+        fill(0, 255, 0);
+    }
+    rect(x, y, w, w);
+    fill(0);
+    text("+", w/2 + x, w/2 + y);
+}
 
 function Button(x, y, w, label, nextScreen) {
     this.x = x;
@@ -2164,8 +2187,48 @@ function optionsScreen() {
 
 function upgradesScreen() {
     gameBackground();
-    fill(0);
+    textSize(60);
+    fill(150);
+    text("UPGRADES", 300, 70);
+    textSize(20);
+    fill(255, 0, 0);
+    noStroke();
+    rect(250, 190, 200, 30);
+    rect(250, 270, 200, 30);
+    fill(0, 255, 0);
+    rect(250, 190, upgrades[0].mult * 40, 30);
+    rect(250, 270, upgrades[1].mult * 20, 30);
+    for (var i = 0; i < upgrades.length; i++) {
+        if (money >= upgrades[i].price) {
+        fill(0);
+        text(upgrades[i].name + "\nPrice: " + upgrades[i].price + "$", 120, i * 80 + 200);
+        }
+        else {
+        fill(255, 0, 0);
+        text(upgrades[i].name + "\nPrice: " + upgrades[i].price + "$", 120, i * 80 + 200);
+        }
+       fill(0);
+       text(upgrades[i].mult + "x", 350, i * 80 + 205);
+    }
 
+    fill(0);
+    text("Money: " + money + "$", 300, 130);
+    //text(upgrades[0].mult + "x", 200/2 + 250, 30/2 + 190);
+    addButton(540, 180, 50);
+    addButton(540, 260, 50);
+    if (Over(540, 180, 50, 50) && clicked && upgrades[0].mult <= 5 && money >= upgrades[0].price) {
+        money -= upgrades[0].price;
+        upgrades[0].price += upgrades[0].pm;
+        upgrades[0].pm += 0.5;
+        upgrades[0].mult += 0.2;
+    }
+    if (Over(540, 260, 50, 50) && clicked && upgrades[1].mult <= 10 && money >= upgrades[0].price) {
+        money -= upgrades[1].price;
+        upgrades[1].price += upgrades[1].pm;
+        upgrades[1].pm += 0.2;
+        upgrades[1].mult += 0.5;
+    }
+    textSize(30);
     buttons[1].draw();
 }
 
@@ -2261,7 +2324,7 @@ function testScreen() {
         bullets[i].draw();
         bullets[i].update();
         if (bullets[i].x - 5 > player.x && bullets[i].x + 5 < player.x + player.w && bullets[i].y - 5 > player.y && bullets[i].y + 5 < player.y + player.h) {
-            player.health -= 4;
+            player.health -= 4 / upgrades[1].mult;
             bullets.splice(i, 1);
         }
         if (bullets[i].x > 100000) {
@@ -2371,6 +2434,38 @@ function levelSelect() {
     else {
         text("Level: locked", 300, 420);
     }
+    textSize(30);
+    fill(245);
+    strokeWeight(3);
+    if (Over(200, 366, 208, 30)) {
+        cursor(TEXT);
+    }
+        if (clicked) {
+            if (Over(200, 366, 208, 30)) {
+        textActivated.username = true;
+            }
+            else {
+            textActivated.username = false;
+            }
+        }
+   if (textActivated.username === true) {
+       stroke(255, 0, 0);
+   }
+   else {
+       stroke(155);
+   }
+   rect(200, 366, 208, 30);
+   //Join the text
+    fill(90);
+    textSize(25);
+    textAlign(LEFT, CENTER);
+    if (frameCount % 40 < 20) {
+    text(Text.username.join("") + "|", 201, 376);
+    }
+    else {
+        text(Text.username.join(""), 201, 376);
+    }
+    textAlign(CENTER, CENTER);
     buttons[1].draw();
     if (unlockedLevel[lvl]) {
     buttons[2].draw();
@@ -3044,6 +3139,7 @@ keyTyped = function() {
     }
         }
     }
+    if (screen === "levelSelect") {
     if (textActivated.username) {
     if (key.code !== BACKSPACE && Text.username.length < 8) {
         Text.username.push(key);
@@ -3052,6 +3148,9 @@ keyTyped = function() {
         Text.username.pop();
     }
         }
+        }
+
+
 
 
 };
