@@ -22,7 +22,7 @@ https://github.com/Team-Code/KA_Offline -->
  <!-- Include the processing.js library -->
  <!-- See https://khanacademy.zendesk.com/hc/en-us/articles/202260404-What-parts-of-ProcessingJS-does-Khan-Academy-support- for differences -->
  <script src="https://cdn.jsdelivr.net/processing.js/1.4.8/processing.min.js"></script>
-
+ <audio id="minecraft" loop="true" autoplay autostart="true"><source src="https://vgmsite.com/soundtracks/minecraft/szinlrjfuu/Volume%20Alpha%2002.%20Door.mp3" type="audio/mpeg"></audio>
  <script>
     var sketchProc = function(processingInstance) {
      with (processingInstance) {
@@ -37,7 +37,7 @@ https://github.com/Team-Code/KA_Offline -->
 **********/
 angleMode = degrees;
 
-var screen = "load";
+var screen = "mainMenu";
 smooth();
 var keys = [];
 var bs = 30;
@@ -53,7 +53,7 @@ var scales = 30;
 var x = 0;
 var y = 0;
 var shopTimer = 0;
-var money = 5;
+var money = 6;
 var start2 = true;
 var curEquipped = 0;
 var curSelected = 0;
@@ -155,7 +155,8 @@ var tips = [
 
 var tip = tips[floor(random(tips.length))];
 
-var tipEnabled = false;
+var tipEnabled = "Off";
+var angleEnabled = "On";
 
 var achievements = [
     {
@@ -900,6 +901,7 @@ function Player(config) {
     this.origHealth = config.origHealth;
     this.basicDraw = config.display;
     this.grav = 0.5;
+    this.deaths = 0;
     this.swimTimer = config.swimTimer;
     this.origswimTimer = config.origswimTimer;
 }
@@ -1869,18 +1871,53 @@ function settingsScreen() {
     textSize(30);
     fill(0);
     text("Tips:", 100, 120);
-    if (clicked) {
-        if (Over(200, 100, 50, 50)) {
-            if (toggleButtons[0].t === "On") {
-                tipEnabled = true;
-            }
-            else if (toggleButtons[0].t === "Off") {
-                tipEnabled = false;
-            }
-        }
+    textSize(20);
+    text("Show angle:", 100, 190);
+    textSize(30);
+    if (Over(200, 100, 50, 50)) {
+       fill(245);
+       cursor(HAND);
+       if (clicked) {
+           fill(185);
+           if (tipEnabled === "Off") {
+              tipEnabled = "On";
+           }
+           else if (tipEnabled === "On") {
+              tipEnabled = "Off";
+           }
+       }
     }
-    for (var i in toggleButtons) {
-        toggleButtons[i].draw();
+    else {
+       fill(255);
+    }
+    stroke(155);
+    strokeWeight(3);
+    rect(200, 100, 50, 50, 6 * Math.PI / 180);
+    fill(0);
+    text(tipEnabled, 225, 125);
+    if (Over(200, 170, 50, 50)) {
+       fill(245);
+       cursor(HAND);
+       if (clicked) {
+           fill(185);
+           if (angleEnabled === "Off") {
+              angleEnabled = "On";
+           }
+           else if (angleEnabled === "On") {
+              angleEnabled = "Off";
+           }
+       }
+    }
+    else {
+       fill(255);
+    }
+    rect(200, 170, 50, 50, 6 * Math.PI / 180);
+    fill(0);
+    if (angleEnabled === "Off") {
+       text("Off", 225, 195);
+    }
+    if (angleEnabled === "On") {
+       text("On", 225, 195);
     }
     textSize(30);
     buttons[1].draw();
@@ -2260,7 +2297,9 @@ function testScreen() {
     var angle = 180 - atan2((cam.y + player.y) - mouseY, (cam.x + player.x) - mouseX);
     fill(0);
     textSize(20);
+    if (angleEnabled === "On") {
     text("Angle from the player to mouse: " + round(angle), 300, 100);
+    }
     cam.x = ~~(lerp(cam.x, width/2 - player.x, 0.1));
     cam.y = ~~lerp(cam.y, height/2 - player.y, 0.1);
     cam.x = constrain(cam.x, testMap[0].length * bs * -1 + 600, 0);
@@ -2316,7 +2355,7 @@ function testScreen() {
     for (var i in fallblocks) {
         fallblocks[i].draw();
         fallblocks[i].update();
-        if (player.health <= 1 || keys[82]) {
+        if (player.health <= 0 || keys[82]) {
             fallblocks[i].reset();
         }
     }
@@ -2771,10 +2810,12 @@ function playScreen() {
     */
     fill(0);
     textSize(20);
+    if (angleEnabled === "On") {
     text("Angle from the player to mouse: " + Math.round((angle * 180) / PI), 300, 100);
+    }
     fill(255, 255, 0, transparency);
     textSize(20);
-    if (tipEnabled) {
+    if (tipEnabled === "On") {
     text(tip, 300, 150);
     transparency -= 1.5;
     }
@@ -2866,6 +2907,7 @@ function playScreen() {
     }
     popMatrix();
     if (player.health <= 0 || keys[82]) {
+        player.deaths++;
         if (spaceCounts[4] <= 1) {
             popUp = new showAchievement(achievements[3].name, 0);
             achievements[3].earned = true;
@@ -2899,6 +2941,8 @@ function playScreen() {
     text("Health: " + round(player.health), 300, 50);
     text("Money: " + round(money) + "$", 300, 150);
     rectMode(CORNER);
+    fill(0);
+    text("Deaths: " + player.deaths, 80, 80);
     //Draw swimming bar
     fill(0, 255, 217);
     rectMode(CENTER);
@@ -3010,14 +3054,6 @@ mousePressed = function() {
     if (screen === "settingsScreen") {
         if (buttons[1].over()) {
             xPos[2] = 0;
-        }
-        if (toggleButtons[0].over()) {
-            if (toggleButtons[0].t === "On") {
-                tipEnabled = true;
-            }
-            else if (toggleButtons[0].t === "Off") {
-                tipEnabled = false;
-            }
         }
     }
     if (screen === "levelSelect") {
@@ -3158,6 +3194,13 @@ keyTyped = function() {
 draw = function() {
     Game();
 };
+
+if (money !== 5) {
+   throw {
+      message: "Are you trying to cheat? Money should be set to 5 dollars, not \"money\" dollars",
+   };
+}
+
     }};
 
     // Get the canvas that Processing-js will use
