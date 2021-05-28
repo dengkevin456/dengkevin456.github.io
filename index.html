@@ -6,15 +6,22 @@ https://github.com/Team-Code/KA_Offline -->
     <title>The land of hope</title>
 </head>
  <style>
+     * {
+       font-family: Times New Roman;
+     }
      #INFO {
         font-family: Times New Roman;
         font-size: 15px;
+     }
+     #username {
+        font-size: 20px;
+        color: gray;
      }
  </style>
  <body>
     <p align="center">
 	<!--This draws the Canvas on the webpage -->
-      <canvas id="mycanvas" width="600" height="600"></canvas>
+      <canvas id="mycanvas" width="600" height="600">Your browser may not support WEBGL</canvas>
     </p>
  </body>
 
@@ -22,12 +29,14 @@ https://github.com/Team-Code/KA_Offline -->
  <!-- Include the processing.js library -->
  <!-- See https://khanacademy.zendesk.com/hc/en-us/articles/202260404-What-parts-of-ProcessingJS-does-Khan-Academy-support- for differences -->
  <script src="https://cdn.jsdelivr.net/processing.js/1.4.8/processing.min.js"></script>
- <audio id="minecraft" loop="true" autoplay autostart="true"><source src="https://vgmsite.com/soundtracks/minecraft/szinlrjfuu/Volume%20Alpha%2002.%20Door.mp3" type="audio/mpeg"></audio>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+ <audio loop="true" autoplay autostart="true"><source src="https://vgmsite.com/soundtracks/minecraft/szinlrjfuu/Volume%20Alpha%2002.%20Door.mp3"><source src="https://vgmsite.com/soundtracks/minecraft/esiyjzozpe/Volume%20Alpha%2008.%20Minecraft.mp3" type="audio/mpeg"></audio>
+
  <script>
     var sketchProc = function(processingInstance) {
      with (processingInstance) {
         size(600, 600);
-        frameRate(60);
+        frameRate(40);
 
         /**********
  * The land of hope by dengkthatsme
@@ -151,12 +160,14 @@ var tips = [
     "If the angle of the player to the mouse\nis exactly 45 degrees, it will shoot\nthe bullet tothe maximum distance",
     "You can jump in mid-air!",
     "You could change the color of the background by\ntoggling the colors!",
+    "Remember to buy upgrades!",
 ];
 
 var tip = tips[floor(random(tips.length))];
 
 var tipEnabled = "Off";
 var angleEnabled = "On";
+var invisibleEnabled = "On";
 
 var achievements = [
     {
@@ -331,12 +342,15 @@ function showAchievement(achievement, timer) {
             fill(0);
             textSize(25);
             if (!this.showed) {
+
                     if (Text.username.join("") === "") {
                     text("Unknown" + stuff.message + "\n"+ this.achievement, 300, this.y - 25);
                     }
                     else {
                     text(Text.username.join("") + stuff.message + "\n" + this.achievement, 300, this.y - 25);
                     }
+
+
             }
             if (this.timer < 25) {
                 this.y = this.timer * 2;
@@ -688,6 +702,12 @@ var upgrades = [
        pm: 2,
        price: 5,
    },
+   {
+       name: "Earn money\nwhen you die",
+       mult: 0,
+       price: 5,
+       pm: 2,
+   },
 ];
 
 var gameMap = [
@@ -789,6 +809,24 @@ var gameMap = [
         "@-------ffffft---------------------",
         "bbtLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL",
     ],
+    [
+        "---------------------------------------------------------------------------------------------------------",
+        "---------------------------------------------------------------------------------------------------------",
+        "@--------------------------------------------------------------------------------------------------------",
+        "iiiii----------------------------------------------------------------------------------------------------",
+        "---------------------------------------------------------------------------------------------------------",
+        "---------------iiii--------------------------------------------------------------------------------------",
+        "-------i----------i---------------------------------------------------i----------------------------------",
+        "---------------iiii----------------------------------------------i---------i-----------------------------",
+        "------------------------i--i--------------------------------i-------------------i------------------------",
+        "------------------------i--i---------------------------i-----------------------------i-------------------",
+        "------------------------iiii----------------------i---------------------------------------i--------------",
+        "---------------------------------------------i-------------------------------------------------i---------",
+        "-------------------------------ii---iiiii-----------------------------------------------------------i----",
+        "-------------------------------------------------------------------------------------------------------pp",
+        "-------------------------------------------------------------------------------------------------------pp",
+        "---------------------------------------------------------------------------------------------------------",
+    ]
 ];
 
 var customMap = [
@@ -1008,8 +1046,14 @@ Block.prototype.draw = function() {
     rect(this.x, this.y, this.w, this.h);
     break;
         case 0:
+            if (invisibleEnabled === "On") {
             noStroke();
             noFill();
+            }
+            else if (invisibleEnabled === "Off") {
+            noStroke();
+            fill(0, 0, 0, 100);
+            }
             rect(this.x, this.y, this.w, this.h);
         break;
     }
@@ -1873,6 +1917,7 @@ function settingsScreen() {
     text("Tips:", 100, 120);
     textSize(20);
     text("Show angle:", 100, 190);
+    text("See invisible\nblocks:", 100, 260);
     textSize(30);
     if (Over(200, 100, 50, 50)) {
        fill(245);
@@ -1919,6 +1964,26 @@ function settingsScreen() {
     if (angleEnabled === "On") {
        text("On", 225, 195);
     }
+    if (Over(200, 240, 50, 50)) {
+        fill(245);
+       cursor(HAND);
+       if (clicked) {
+           fill(185);
+           if (invisibleEnabled === "Off") {
+              invisibleEnabled = "On";
+           }
+           else if (invisibleEnabled === "On") {
+              invisibleEnabled = "Off";
+           }
+       }
+
+    }
+    else {
+          fill(255);
+       }
+    rect(200, 240, 50, 50);
+    fill(0);
+    text(invisibleEnabled, 225, 265);
     textSize(30);
     buttons[1].draw();
 }
@@ -2230,11 +2295,13 @@ function upgradesScreen() {
     textSize(20);
     fill(255, 0, 0);
     noStroke();
-    rect(250, 190, 200, 30);
-    rect(250, 270, 200, 30);
+    for (var i in upgrades) {
+        rect(250, i * 80 + 190, 200, 30);
+    }
     fill(0, 255, 0);
     rect(250, 190, upgrades[0].mult * 40, 30);
     rect(250, 270, upgrades[1].mult * 20, 30);
+    rect(250, 350, upgrades[2].mult * 20, 30);
     for (var i = 0; i < upgrades.length; i++) {
         if (money >= upgrades[i].price) {
         fill(0);
@@ -2253,6 +2320,7 @@ function upgradesScreen() {
     //text(upgrades[0].mult + "x", 200/2 + 250, 30/2 + 190);
     addButton(540, 180, 50);
     addButton(540, 260, 50);
+    addButton(540, 340, 50);
     if (Over(540, 180, 50, 50) && clicked && upgrades[0].mult <= 5 && money >= upgrades[0].price) {
         money -= upgrades[0].price;
         upgrades[0].price += upgrades[0].pm;
@@ -2264,6 +2332,12 @@ function upgradesScreen() {
         upgrades[1].price += upgrades[1].pm;
         upgrades[1].pm += 0.2;
         upgrades[1].mult += 0.5;
+    }
+    if (Over(540, 340, 50, 50) && clicked && upgrades[2].mult <= 10 && money >= upgrades[2].price) {
+        money -= upgrades[2].price;
+        upgrades[2].price += upgrades[1].pm;
+        upgrades[2].pm += 0.2;
+        upgrades[2].mult += 0.5;
     }
     textSize(30);
     buttons[1].draw();
@@ -2401,6 +2475,7 @@ function testScreen() {
     }
     popMatrix();
     if (player.health <= 0 || keys[82]) {
+        money += upgrades[2].mult;
         if (spaceCounts[4] <= 1) {
             popUp = new showAchievement(achievements[3].name, 0);
             achievements[3].earned = true;
@@ -2466,6 +2541,7 @@ function levelSelect() {
     lvlButton(300, 50, 3, unlockedLevel[2]);
     lvlButton(400, 50, 4, unlockedLevel[3]);
     lvlButton(100, 150, 5, unlockedLevel[4]);
+    lvlButton(200, 150, 6, unlockedLevel[5]);
     fill(0);
     if (unlockedLevel[lvl]) {
     text("Level: " + (lvl + 1), 300, 420);
@@ -3159,10 +3235,10 @@ keyReleased = function() {
 keyTyped = function() {
     if (screen === "optionsScreen") {
         if (textActivated.name) {
-    if (key.code !== BACKSPACE && Text.name.length < 20) {
+    if (keyCode !== BACKSPACE && Text.name.length < 20) {
         Text.name.push(key);
     }
-    if (key.code === BACKSPACE) {
+    if (keyCode === BACKSPACE) {
         Text.name.pop();
     }
         }
@@ -3170,17 +3246,17 @@ keyTyped = function() {
             if (key.code !== BACKSPACE && Text.title.length < 20) {
         Text.title.push(key);
     }
-    if (key.code === BACKSPACE) {
+    if (keyCode === BACKSPACE) {
         Text.title.pop();
     }
         }
     }
     if (screen === "levelSelect") {
     if (textActivated.username) {
-    if (key.code !== BACKSPACE && Text.username.length < 8) {
+    if (key.code !== 8 && Text.username.length < 8) {
         Text.username.push(key);
     }
-    if (key.code === BACKSPACE) {
+    if (keyCode === 8) {
         Text.username.pop();
     }
         }
