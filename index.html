@@ -30,7 +30,7 @@ https://github.com/Team-Code/KA_Offline -->
  <!-- See https://khanacademy.zendesk.com/hc/en-us/articles/202260404-What-parts-of-ProcessingJS-does-Khan-Academy-support- for differences -->
  <script src="https://cdn.jsdelivr.net/processing.js/1.4.8/processing.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
- <audio loop="true" autoplay autostart="true"><source src="https://vgmsite.com/soundtracks/minecraft/szinlrjfuu/Volume%20Alpha%2002.%20Door.mp3"><source src="https://vgmsite.com/soundtracks/minecraft/esiyjzozpe/Volume%20Alpha%2008.%20Minecraft.mp3" type="audio/mpeg"></audio>
+ <audio loop="true" autoplay autostart="true"><source src="https://vgmsite.com/soundtracks/minecraft/szinlrjfuu/Volume%20Alpha%2002.%20Door.mp3"></audio>
 
  <script>
     var sketchProc = function(processingInstance) {
@@ -62,7 +62,7 @@ var scales = 30;
 var x = 0;
 var y = 0;
 var shopTimer = 0;
-var money = 6;
+var money = 0;
 var pain = 0;
 var start2 = true;
 var curEquipped = 0;
@@ -172,6 +172,7 @@ var tip = tips[floor(random(tips.length))];
 var tipEnabled = "Off";
 var angleEnabled = "On";
 var invisibleEnabled = "On";
+var posEnabled = "Off";
 
 var achievements = [
     {
@@ -216,6 +217,12 @@ var achievements = [
         earned: false,
         difficulty: "Easy",
     },
+    {
+        name: "leveling up!",
+        description: "Getting an upgrade",
+        earned: false,
+        difficulty: "Very easy",
+    }, // 7
 
 ];
 
@@ -725,6 +732,12 @@ var upgrades = [
        name: "Earn money\nwhen you die",
        mult: 0,
        price: 5,
+       pm: 2,
+   },
+   {
+       name: "Regenerate health\nwhen you took dmg",
+       mult: 0,
+       price: 20,
        pm: 2,
    },
 ];
@@ -1500,7 +1513,9 @@ Player.prototype.update = function() {
             this.vx = this.maxSpeed;
         }
     }
-
+    if (this.health < this.origHealth) {
+        this.health += upgrades[3].mult;
+    }
     this.x += this.vx;
     this.collide(blocks, this.vx, 0);
     this.collide(fallblocks, this.vx, 0);
@@ -1937,6 +1952,7 @@ function settingsScreen() {
     textSize(20);
     text("Show angle:", 100, 190);
     text("Can't see invisible\nblocks:", 100, 260);
+    text("Show player\nposition:", 350, 120);
     textSize(30);
     if (Over(200, 100, 50, 50)) {
        fill(245);
@@ -2003,6 +2019,26 @@ function settingsScreen() {
     rect(200, 240, 50, 50);
     fill(0);
     text(invisibleEnabled, 225, 265);
+    if (Over(450, 100, 50, 50)) {
+        fill(245);
+       cursor(HAND);
+       if (clicked) {
+           fill(185);
+           if (posEnabled === "Off") {
+              posEnabled = "On";
+           }
+           else if (posEnabled === "On") {
+              posEnabled = "Off";
+           }
+       }
+
+    }
+    else {
+          fill(255);
+       }
+    rect(450, 100, 50, 50);
+    fill(0);
+    text(posEnabled, 475, 125);
     //Draw the sliders
     slider(200, 350, 255);
     slider(200, 380, 255);
@@ -2366,6 +2402,7 @@ function upgradesScreen() {
     rect(250, 190, upgrades[0].mult * 40, 30);
     rect(250, 270, upgrades[1].mult * 20, 30);
     rect(250, 350, upgrades[2].mult * 20, 30);
+    rect(250, 430, upgrades[3].mult * 200, 30);
     for (var i = 0; i < upgrades.length; i++) {
         if (money >= upgrades[i].price) {
         fill(0);
@@ -2385,13 +2422,19 @@ function upgradesScreen() {
     addButton(540, 180, 50);
     addButton(540, 260, 50);
     addButton(540, 340, 50);
+    addButton(540, 420, 50);
     if (Over(540, 180, 50, 50) && clicked && upgrades[0].mult <= 5 && money >= upgrades[0].price) {
         money -= upgrades[0].price;
         upgrades[0].price += upgrades[0].pm;
         upgrades[0].pm += 0.5;
         upgrades[0].mult += 0.2;
+        if (spaceCounts[7] <= 1) {
+           popUp = new showAchievement(achievements[7].name, 0);
+           achievements[7].name = true;
+        }
+        spaceCounts[7]++;
     }
-    if (Over(540, 260, 50, 50) && clicked && upgrades[1].mult <= 10 && money >= upgrades[0].price) {
+    if (Over(540, 260, 50, 50) && clicked && upgrades[1].mult <= 10 && money >= upgrades[1].price) {
         money -= upgrades[1].price;
         upgrades[1].price += upgrades[1].pm;
         upgrades[1].pm += 0.2;
@@ -2399,9 +2442,15 @@ function upgradesScreen() {
     }
     if (Over(540, 340, 50, 50) && clicked && upgrades[2].mult <= 10 && money >= upgrades[2].price) {
         money -= upgrades[2].price;
-        upgrades[2].price += upgrades[1].pm;
+        upgrades[2].price += upgrades[2].pm;
         upgrades[2].pm += 0.2;
         upgrades[2].mult += 0.5;
+    }
+    if (Over(540, 420, 50, 50) && clicked && upgrades[3].mult <= 1 && money >= upgrades[3].price) {
+        money -= upgrades[3].price;
+        upgrades[3].price += upgrades[3].pm;
+        upgrades[3].pm += 0.2;
+        upgrades[3].mult += 0.1;
     }
     textSize(30);
     buttons[1].draw();
@@ -2501,7 +2550,7 @@ function testScreen() {
         bullets[i].draw();
         bullets[i].update();
         if (bullets[i].x - 5 > player.x && bullets[i].x + 5 < player.x + player.w && bullets[i].y - 5 > player.y && bullets[i].y + 5 < player.y + player.h) {
-            player.health -= 4 / upgrades[1].mult;
+            player.health -= (4 / upgrades[1].mult);
             bullets.splice(i, 1);
         }
         if (bullets[i].x > 100000) {
@@ -2880,7 +2929,7 @@ function customLevelsScreen() {
         bullets[i].draw();
         bullets[i].update();
         if (bullets[i].x - 5 > player.x && bullets[i].x + 5 < player.x + player.w && bullets[i].y - 5 > player.y && bullets[i].y + 5 < player.y + player.h) {
-            player.health -= 4;
+            player.health -= (4 / upgrades[1].mult);
             //bullets[i].x = 10000;
             bullets.splice(i, 1);
         }
@@ -2898,6 +2947,7 @@ function customLevelsScreen() {
         }
     }
     if (player.health <= 0 || keys[82]) {
+        money += upgrades[2].mult;
         if (spaceCounts[4] <= 1) {
             popUp = new showAchievement(achievements[3].name, 0);
             achievements[3].earned = true;
@@ -2945,6 +2995,12 @@ function customLevelsScreen() {
     }
     else {
         pain = 0;
+    }
+    textSize(20);
+     if (posEnabled === "On") {
+    fill(0);
+    text("x: " + round(player.x), 500, 400);
+    text("y: " + round(player.y), 500, 440);
     }
     fill(255, 0, 0, pain);
     rect(0, 0, 600, 600);
@@ -3036,7 +3092,7 @@ function playScreen() {
         bullets[i].draw();
         bullets[i].update();
         if (bullets[i].x - 5 > player.x && bullets[i].x + 5 < player.x + player.w && bullets[i].y - 5 > player.y && bullets[i].y + 5 < player.y + player.h) {
-            player.health -= 4;
+            player.health -= (4 / upgrades[1].mult);
             bullets.splice(i, 1);
         }
 
@@ -3067,6 +3123,7 @@ function playScreen() {
     }
     popMatrix();
     if (player.health <= 0 || keys[82]) {
+        money += upgrades[2].mult;
         player.deaths++;
         if (spaceCounts[4] <= 1) {
             popUp = new showAchievement(achievements[3].name, 0);
@@ -3130,6 +3187,12 @@ function playScreen() {
     }
     fill(255, 0, 0, pain);
     rect(0, 0, 600, 600);
+    textSize(20);
+    if (posEnabled === "On") {
+    fill(0);
+    text("x: " + round(player.x), 500, 400);
+    text("y: " + round(player.y), 500, 440);
+    }
     textSize(30);
     buttons[5].draw();
 }
@@ -3240,6 +3303,7 @@ mousePressed = function() {
     if (screen === "levelSelect") {
     if (buttons[2].over()) {
         mapFill(gameMap[lvl]);
+        bullets.splice(0, bullets.length);
     }
     if (buttons[1].over()) {
         transparency = 255;
