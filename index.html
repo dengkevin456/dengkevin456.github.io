@@ -63,6 +63,7 @@ var x = 0;
 var y = 0;
 var shopTimer = 0;
 var money = 6;
+var pain = 0;
 var start2 = true;
 var curEquipped = 0;
 var curSelected = 0;
@@ -79,6 +80,7 @@ var editY = 0;
 var blockSelected = "b";
 var d = 180 / Math.PI;
 var frameCount = frameCount * 180 / Math.PI;
+var mouseIsPressed = false;
 var testMap = [
     "",
     "",
@@ -156,11 +158,13 @@ var howMessages = [
     "4) Achievements\n\n1. Go to \"all achievements\"\n2. Press RIGHT/LEFT to\nbrowse through\n3. The more the achievement is hard,\nthe more you will earn more money",
 ];
 
+
 var tips = [
     "If the angle of the player to the mouse\nis exactly 45 degrees, it will shoot\nthe bullet tothe maximum distance",
     "You can jump in mid-air!",
     "You could change the color of the background by\ntoggling the colors!",
     "Remember to buy upgrades!",
+    "When you can't pass a level\nremember that you can always buy more powerful skins\nat the shop :)",
 ];
 
 var tip = tips[floor(random(tips.length))];
@@ -243,6 +247,21 @@ var cam = {
 var stuff = {
     message: " has made the achievement",
 };
+
+var sliders = {
+   r: 200,
+   g: 421,
+   b: 455,
+}
+
+function slider(x, y, l) {
+    stroke(0);
+    strokeWeight(4);
+    line(x, y, x + l, y);
+    line(x, y - 5, x, y + 5);
+    line(x + l, y - 5, x + l, y + 5);
+    strokeWeight(3);
+}
 
 function objectButton(x, y, type, name) {
     strokeWeight(2);
@@ -1604,7 +1623,7 @@ follower.prototype.update = function() {
     for (var i in bullets) {
         if (circleCollide(bullets[i], this)) {
             bullets[i].x = 10000;
-            this.x = 1000;
+            this.x = Infinity;
             bullets.splice(i, 1);
         }
     }
@@ -1785,7 +1804,7 @@ var toggleButtons = [
 ];
 
 function gameBackground() {
-    background(0, 221, 255);
+    background(sliders.r - 200, sliders.g - 200, sliders.b - 200);
 }
 
 function load() {
@@ -1917,7 +1936,7 @@ function settingsScreen() {
     text("Tips:", 100, 120);
     textSize(20);
     text("Show angle:", 100, 190);
-    text("See invisible\nblocks:", 100, 260);
+    text("Can't see invisible\nblocks:", 100, 260);
     textSize(30);
     if (Over(200, 100, 50, 50)) {
        fill(245);
@@ -1984,6 +2003,51 @@ function settingsScreen() {
     rect(200, 240, 50, 50);
     fill(0);
     text(invisibleEnabled, 225, 265);
+    //Draw the sliders
+    slider(200, 350, 255);
+    slider(200, 380, 255);
+    slider(200, 410, 255);
+    sliders.g = constrain(sliders.g, 200, 455);
+    sliders.r = constrain(sliders.r, 200, 455);
+    sliders.b = constrain(sliders.b, 200, 455);
+    if (dist(mouseX, mouseY, sliders.r, 350) <= 8) {
+        fill(245);
+        cursor(HAND);
+        if (mouseIsPressed) {
+            sliders.r = mouseX;
+        }
+    }
+    else {
+       fill(255);
+    }
+    ellipse(sliders.r, 350, 16, 16);
+    if (dist(mouseX, mouseY, sliders.g, 380) <= 8) {
+        fill(245);
+        cursor(HAND);
+        if (mouseIsPressed) {
+            sliders.g = mouseX;
+        }
+    }
+    else {
+       fill(255);
+    }
+    ellipse(sliders.g, 380, 16, 16);
+    if (dist(mouseX, mouseY, sliders.b, 410) <= 8) {
+        fill(245);
+        cursor(HAND);
+        if (mouseIsPressed) {
+            sliders.b = mouseX;
+        }
+    }
+    else {
+       fill(255);
+    }
+    ellipse(sliders.b, 410, 16, 16);
+    fill(0);
+    textSize(20);
+    text("Color 1:", 100, 345);
+    text("Color 2:", 100, 375);
+    text("Color 3:", 100, 405);
     textSize(30);
     buttons[1].draw();
 }
@@ -2786,7 +2850,7 @@ function customLevelsScreen() {
     cam.x = ~~(lerp(cam.x, width/2 - player.x, 0.1));
     cam.y = ~~lerp(cam.y, height/2 - player.y, 0.1);
     cam.x = constrain(cam.x, customMap[clvl].map[0].length* -1 * bs + 600, 0);
-    cam.y = constrain(cam.y, customMap[clvl].map.length * -1 * bs + 600, 200);
+    cam.y = constrain(cam.y, -1800, 200);
     player.x = constrain(player.x, 0, customMap[clvl].map[0].length * bs - player.w);
     fill(255, 0, 0, transparency);
     textSize(30);
@@ -2864,6 +2928,26 @@ function customLevelsScreen() {
     }
     rectMode(CORNER);
     transparency -= 3;
+    if (player.health <= 10) {
+
+        pain = 205 - player.health * 10;
+        //Shake the camera when the health is less than 10
+        /*
+        To understand more trig, here is an example
+        y = a * sin(bx + c) + d
+        a = amplitude aka the height of the waves
+        b = period (wavelength)
+        c = phase shift (translate x coordinate)
+        d = translate y coordinate
+        */
+        cam.x += 8 * cos(((frameCount * 180) / Math.PI) * (8 / player.health + 8));
+        cam.y += 8 * sin(((frameCount * 180) / Math.PI) * (8 / player.health + 8));
+    }
+    else {
+        pain = 0;
+    }
+    fill(255, 0, 0, pain);
+    rect(0, 0, 600, 600);
     textSize(30);
     buttons[14].draw();
 }
@@ -2892,7 +2976,7 @@ function playScreen() {
     fill(255, 255, 0, transparency);
     textSize(20);
     if (tipEnabled === "On") {
-    text(tip, 300, 150);
+    text(tip, 300, 250);
     transparency -= 1.5;
     }
     pushMatrix();
@@ -3026,6 +3110,26 @@ function playScreen() {
     rect(300, 100, player.swimTimer/4, 20);
     }
     rectMode(CORNER);
+    if (player.health <= 10) {
+
+        pain = 205 - player.health * 10;
+        //Shake the camera when the health is less than 10
+        /*
+        To understand more trig, here is an example
+        y = a * sin(bx + c) + d
+        a = amplitude aka the height of the waves
+        b = period (wavelength)
+        c = phase shift (translate x coordinate)
+        d = translate y coordinate
+        */
+        cam.x += 8 * cos(((frameCount * 180) / Math.PI) * (8 / player.health + 8));
+        cam.y += 8 * sin(((frameCount * 180) / Math.PI) * (8 / player.health + 8));
+    }
+    else {
+        pain = 0;
+    }
+    fill(255, 0, 0, pain);
+    rect(0, 0, 600, 600);
     textSize(30);
     buttons[5].draw();
 }
@@ -3115,6 +3219,7 @@ function Game() {
 
 mousePressed = function() {
     if (mouseButton === LEFT) {
+    mouseIsPressed = true;
     clicked = true;
     if (screen === "mainMenu") {
         if (buttons[13].over()) {
@@ -3222,6 +3327,10 @@ mousePressed = function() {
         }
         }
     }
+};
+
+mouseReleased = function() {
+    mouseIsPressed = false;
 };
 
 keyPressed = function() {
