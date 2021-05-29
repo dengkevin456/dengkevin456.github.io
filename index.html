@@ -731,7 +731,7 @@ var upgrades = [
    {
        name: "Earn money\nwhen you die",
        mult: 0,
-       price: 5,
+       price: 100,
        pm: 2,
    },
    {
@@ -2542,7 +2542,7 @@ function testScreen() {
     for (var i in fallblocks) {
         fallblocks[i].draw();
         fallblocks[i].update();
-        if (player.health <= 0 || keys[82]) {
+        if (player.health <= 0) {
             fallblocks[i].reset();
         }
     }
@@ -2565,14 +2565,14 @@ function testScreen() {
     for (var i in f) {
         f[i].draw();
         f[i].update();
-        if (player.health <= 0 || keys[82]) {
+        if (player.health <= 0  ) {
             f[i].reset();
         }
     }
     for (var i in monsters) {
         monsters[i].draw();
         monsters[i].update();
-        if (player.health <= 0 || keys[82]) {
+        if (player.health <= 0) {
             monsters[i].reset();
         }
     }
@@ -2587,7 +2587,7 @@ function testScreen() {
         spikes[i].update();
     }
     popMatrix();
-    if (player.health <= 0 || keys[82]) {
+    if (player.health <= 0) {
         money += upgrades[2].mult;
         if (spaceCounts[4] <= 1) {
             popUp = new showAchievement(achievements[3].name, 0);
@@ -2946,7 +2946,7 @@ function customLevelsScreen() {
             }
         }
     }
-    if (player.health <= 0 || keys[82]) {
+    if (player.health <= 0) {
         money += upgrades[2].mult;
         if (spaceCounts[4] <= 1) {
             popUp = new showAchievement(achievements[3].name, 0);
@@ -3084,7 +3084,7 @@ function playScreen() {
     for (var i in fallblocks) {
         fallblocks[i].draw();
         fallblocks[i].update();
-        if (player.health <= 0 || keys[82]) {
+        if (player.health <= 0 ) {
             fallblocks[i].reset();
         }
     }
@@ -3100,14 +3100,14 @@ function playScreen() {
     for (var i in f) {
         f[i].draw();
         f[i].update();
-        if (player.health <= 0 || keys[82]) {
+        if (player.health <= 0 ) {
             f[i].reset();
         }
     }
     for (var i in monsters) {
         monsters[i].draw();
         monsters[i].update();
-        if (player.health <= 0 || keys[82]) {
+        if (player.health <= 0) {
             monsters[i].reset();
         }
     }
@@ -3122,7 +3122,7 @@ function playScreen() {
         spikes[i].update();
     }
     popMatrix();
-    if (player.health <= 0 || keys[82]) {
+    if (player.health <= 0) {
         money += upgrades[2].mult;
         player.deaths++;
         if (spaceCounts[4] <= 1) {
@@ -3270,6 +3270,9 @@ function Game() {
     }
     if (screen === "beatLevel") {
         transparency = 255;
+        tip = tips[floor(random(tips.length))];
+    }
+    if (screen === "levelSelect") {
         tip = tips[floor(random(tips.length))];
     }
     popUp.draw();
