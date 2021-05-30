@@ -36,7 +36,8 @@ https://github.com/Team-Code/KA_Offline -->
     var sketchProc = function(processingInstance) {
      with (processingInstance) {
         size(600, 600);
-        frameRate(40);
+        var fps = 40;
+        frameRate(fps);
 
         /**********
  * The land of hope by dengkthatsme
@@ -45,6 +46,8 @@ https://github.com/Team-Code/KA_Offline -->
  *
 **********/
 angleMode = degrees;
+
+
 
 var screen = "load";
 smooth();
@@ -62,6 +65,7 @@ var scales = 30;
 var x = 0;
 var y = 0;
 var shopTimer = 0;
+var gameTimer = 0;
 var money = 0;
 var pain = 0;
 var start2 = true;
@@ -160,11 +164,15 @@ var howMessages = [
 
 
 var tips = [
-    "If the angle of the player to the mouse\nis exactly 45 degrees, it will shoot\nthe bullet tothe maximum distance",
+    "If the angle of the player to the mouse\nis exactly 45 or 135, it will shoot\nthe bullet tothe maximum distance",
     "You can jump in mid-air!",
     "You could change the color of the background by\ntoggling the colors!",
     "Remember to buy upgrades!",
     "When you can't pass a level\nremember that you can always buy more powerful skins\nat the shop :)",
+    "Hold SPACE to jump higher\non trampolines and monsters!",
+    "You can turn on invisible blocks, but\nthat is considered cheating",
+    "Put your score on the leaderboard!",
+    "We want more people to create their\nown levels! Go create a level and post\nit in the T&T!",
 ];
 
 var tip = tips[floor(random(tips.length))];
@@ -173,6 +181,19 @@ var tipEnabled = "Off";
 var angleEnabled = "On";
 var invisibleEnabled = "On";
 var posEnabled = "Off";
+
+
+var scores = [
+    ["Kevin", 3, 100],
+    ["Eric", 4, 526],
+    ["", 1, 141.7],
+
+].sort(function (a, b) {
+  return a[1] - b[1];
+});
+
+var sortType = 0;
+
 
 var achievements = [
     {
@@ -332,6 +353,13 @@ function objectButton(x, y, type, name) {
             rectMode(CENTER);
             rect(17, 0, 30, 10);
             rectMode(CORNER);
+            popMatrix();
+        break;
+        case "m":
+            pushMatrix();
+            translate(x, y);
+            fill(0, 150, 60);
+            rect(0, 0, bs, bs, 3 * cos(frameCount * Math.PI / 180) + 3);
             popMatrix();
         break;
     }
@@ -858,7 +886,24 @@ var gameMap = [
         "-------------------------------------------------------------------------------------------------------pp",
         "-------------------------------------------------------------------------------------------------------pp",
         "---------------------------------------------------------------------------------------------------------",
-    ]
+    ],
+    [
+        "b--------------------------------------b",
+        "b-----------------------------------pp-b",
+        "bm------m-----m-------m----m-m------pp-b",
+        "b--m----m------m--m----m-----m---m-----b",
+        "b--m---m---m----m----m----m-----m--m---b",
+        "b--m----m----m----m------m-------m-----b",
+        "b-----m------m-----m----m----m------m--b",
+        "bm-----m--------m-------m---------m----b",
+        "b----m-----m--------m---------m--------b",
+        "bm--------m---------m-------m----------b",
+        "b----m--------m----------m-------m-----b",
+        "b--m--------m------m--------m----------b",
+        "b--------m------------m----------------b",
+        "b-@---m-------m-----m------m----m---m--b",
+        "bbbbbb--------------------------bbbbbbbb",
+    ],
 ];
 
 var customMap = [
@@ -1029,6 +1074,7 @@ function monster(x, y) {
 monster.prototype.reset = function() {
     this.x = this.ox;
     this.y = this.oy;
+    this.vx = 2;
 };
 
 var monsters = [];
@@ -1669,9 +1715,20 @@ monster.prototype.collide = function(arr) {
             this.vx *= -1;
         }
     }
+
     if (rectCollide(this, player)) {
+        if (player.vy > 0) {
+            player.vy  = -8;
+            this.x = Infinity;
+            this.vx = 0;
+            if (keys[UP]) {
+               player.vy = -14;
+            }
+        }
+        else {
         this.vx *= -1;
         player.health -= 3;
+        }
     }
 };
 
@@ -1694,6 +1751,8 @@ function addButton(x, y, w) {
     fill(0);
     text("+", w/2 + x, w/2 + y);
 }
+
+
 
 function Button(x, y, w, label, nextScreen) {
     this.x = x;
@@ -1783,7 +1842,7 @@ function lvlButton(x, y, level, unlock) {
 }
 
 var buttons = [
-    new Button(300, 300, 104, "Play", "levelSelect"),
+    new Button(300, 320, 104, "Play", "levelSelect"),
     new Button(300, 546, 104, "Back", "mainMenu"),
     new Button(500, 500, 104, "Next" ,"playScreen"),
     new Button(300, 300, 104, "Next\nLevel", "playScreen"),
@@ -1812,6 +1871,7 @@ var buttons = [
     new Button(300, 300, 104, "Back", "optionsScreen"),
     new Button(100, 320, 104, "Settings", "settingsScreen"),
     new Button(500, 320, 104, "Upgrades", "upgradesScreen"),
+    new Button(300, 200, 104, "Leaders", "leaderboard"), // 29
 ];
 
 var toggleButtons = [
@@ -1876,9 +1936,59 @@ function mainMenu() {
     textSize(20);
     buttons[13].draw();
     buttons[27].draw();
+    buttons[29].draw();
     buttons[28].draw();
     textSize(13);
     buttons[21].draw();
+
+}
+
+function leaderboard() {
+    gameBackground();
+    textSize(60);
+    fill(150);
+    text("Leaders", 300, 50);
+    textSize(30);
+    if (Over(100, 200, 150, 50)) {
+       fill(165);
+       cursor(HAND);
+       if (clicked) {
+          if (sortType < 1) {
+          sortType++;
+          }
+          else {
+          sortType= 0;
+          }
+       }
+    }
+    else {
+       fill(185);
+    }
+    noStroke();
+    rect(100, 200, 150, 50);
+    textSize(25);
+    fill(0);
+    if (sortType === 0) {
+        text("Least\ndeaths", 175, 225);
+    }
+    else if (sortType === 1) {
+        text("Most\nmoney", 175, 225);
+    }
+    fill(150);
+    for (var i = 0; i < 3; i++) {
+        if (sortType === 0) {
+        scores.sort(function(a, b) { return (a[1] - b[1]); });
+        text((i+1)+') '+scores[i][0]+' - '+scores[i][1],300,300+i*35,30);
+        }
+        else if (sortType === 1) {
+        scores.sort(function(a, b) { return (b[2] - a[2]); });
+        text((i+1)+') '+scores[i][0]+' - '+scores[i][2] + "$",300,300+i*35,30);
+        }
+    }
+
+    textSize(30);
+
+    buttons[1].draw();
 }
 
 function achievementsScreen() {
@@ -2155,6 +2265,9 @@ function createScreen() {
             else if (s === "C") {
                 saveText += "C";
             }
+            else if (s === "m") {
+                saveText += "m";
+            }
             if (spaceCounts[5] <= 1) {
                 popUp = new showAchievement(achievements[2].name, 0);
                 achievements[2].earned = true;
@@ -2222,6 +2335,13 @@ function createScreen() {
                 case "@":
                     fill(255, 0, 0);
                     rect(x, y, 30, 30);
+                break;
+                case "m":
+                    pushMatrix();
+                    translate(x, y);
+                    fill(0, 150, 60);
+                    rect(0, 0, bs, bs, 3 * cos(frameCount * 180 / Math.PI) + 3);
+                    popMatrix();
                 break;
             }
         }
@@ -2291,10 +2411,18 @@ function createScreen() {
             rectMode(CORNER);
         popMatrix();
     }
+    if (blockSelected === "m") {
+        pushMatrix();
+        translate(round((mouseX - 15)/30) * 30, round((mouseY - 15)/30) * 30);
+        fill(0, 150, 60, 150);
+        rect(0, 0, 30, 30, 3 * cos(frameCount) + 3);
+        popMatrix();
+    }
     if (blockSelected === "@") {
         fill(255, 0, 0, 150);
         rect(round((mouseX - 15)/30) * 30, round((mouseY - 15)/30) * 30, 30, 30);
     }
+
     moveTimer++;
     textSize(30);
     buttons[1].draw();
@@ -2321,6 +2449,7 @@ function optionsScreen() {
     objectButton(270, 300, "C", "cannon");
     objectButton(300, 300, "@", "player");
     objectButton(360, 300, "t", "Trampoline");
+    objectButton(420, 300, "m", "Monster");
     textSize(30);
     fill(245);
     strokeWeight(3);
@@ -2342,6 +2471,7 @@ function optionsScreen() {
        stroke(155);
    }
    //Your name
+   rectMode(CORNER);
     rect(200, 166, 208, 30);
     fill(0);
     text("Your name:", 100, 179);
@@ -2641,6 +2771,7 @@ function beatLevel() {
     fill(0);
     textSize(30);
     text("Congratulations!", 300, 150);
+
     textSize(20);
     buttons[3].draw();
     buttons[4].draw();
@@ -2655,6 +2786,7 @@ function levelSelect() {
     lvlButton(400, 50, 4, unlockedLevel[3]);
     lvlButton(100, 150, 5, unlockedLevel[4]);
     lvlButton(200, 150, 6, unlockedLevel[5]);
+    lvlButton(300, 150, 7, unlockedLevel[6]);
     fill(0);
     if (unlockedLevel[lvl]) {
     text("Level: " + (lvl + 1), 300, 420);
@@ -2868,6 +3000,12 @@ function beatAllLevels() {
     fill(0);
     textSize(40);
     text("Congratulations!\nYou bet all normal levels!", 300, 50);
+    if (start2) {
+    println("This is your score");
+    println("If you are able to fit in the top 5, copy paste the thing down below to tips and thanks :P\n");
+     println("[\"" + Text.username.join("") + "\", " + player.deaths + ", " + money + "],");
+    start2 = false;
+    }
     textSize(20);
     buttons[20].draw();
 }
@@ -3267,7 +3405,11 @@ function Game() {
         case "upgradesScreen":
            upgradesScreen();
         break;
+        case "leaderboard":
+           leaderboard();
+        break;
     }
+
     if (screen === "beatLevel") {
         transparency = 255;
         tip = tips[floor(random(tips.length))];
@@ -3432,7 +3574,7 @@ keyTyped = function() {
     if (key.code !== 8 && Text.username.length < 8) {
         Text.username.push(key);
     }
-    if (keyCode === 8) {
+    if (key.code === 32) {
         Text.username.pop();
     }
         }
