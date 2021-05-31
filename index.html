@@ -181,6 +181,7 @@ var tipEnabled = "Off";
 var angleEnabled = "On";
 var invisibleEnabled = "On";
 var posEnabled = "Off";
+var darkMode = "Off";
 
 
 var scores = [
@@ -522,20 +523,47 @@ function Bullet(x, y, sx, sy, type) {
     this.shootTimer = 0;
     this.grav = 0.2;
     this.draw = function() {
-
+        this.d = dist(this.x, this.y, player.x, player.y) / 2;
         switch (this.type) {
             case "cannon":
                 pushMatrix();
                 translate(this.x, this.y);
-                fill(90);
+
+        if (darkMode === "On") {
+           fill(90, 90, 90, 4000 / this.d - 20);
+        }
+        else {
+        fill(90);
+        }
                 ellipse(0, 0, this.w, this.w);
                 popMatrix();
             break;
             case "player":
                 pushMatrix();
                 translate(this.x, this.y);
-                fill(150);
+
+        if (darkMode === "On") {
+           fill(90, 90, 90, 4000 / this.d - 20);
+        }
+        else {
+        fill(90);
+        }
                 ellipse(0, 0, this.w, this.w);
+                popMatrix();
+            break;
+            case "coin":
+                pushMatrix();
+                translate(this.x, this.y);
+                if (darkMode === "On") {
+           fill(255, 255, 0, 4000 / this.d - 20);
+        }
+        else {
+        fill(255, 255, 0);
+        }
+                ellipse(0, 0, this.w * 2, this.w * 2);
+                fill(0);
+                textSize(20);
+                text("$", 0, 0);
                 popMatrix();
             break;
         }
@@ -543,9 +571,10 @@ function Bullet(x, y, sx, sy, type) {
     this.update = function() {
         this.x += this.speed * this.sx;
         this.y += this.speed * this.sy;
-        if (this.type === "player") {
+        if (this.type === "player" || this.type === "coin") {
             this.sy += this.grav;
         }
+
     };
 
     this.collide = function(arr) {
@@ -787,7 +816,7 @@ var gameMap = [
         "--------------------------",
         "--------------------------",
         "--------------------------",
-        "------l-------CCCC-------",
+        "-------------CCCC-------",
         "--------------------------",
         "---------f-f------------pp",
         "---@--ss-f-fssss------b-pp",
@@ -903,6 +932,21 @@ var gameMap = [
         "b--------m------------m----------------b",
         "b-@---m-------m-----m------m----m---m--b",
         "bbbbbb--------------------------bbbbbbbb",
+    ],
+    [
+        "-----------------------------------------",
+        "-----------------------------------------",
+        "----------------------------------------p",
+        "-----------------------------------------",
+        "----------b---------------b--------------",
+        "----------b-------C-------b----------i---",
+        "----------b------C$C------b--------------",
+        "----------b-------C-------b------i-------",
+        "----------b-m----------m--b--------------",
+        "---@----ttbbbbbbbbbbbbbbbbb--------------",
+        "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
+        "-----------------------------------------",
+        "-----------------------------------------",
     ],
 ];
 
@@ -1079,6 +1123,29 @@ monster.prototype.reset = function() {
 
 var monsters = [];
 
+function moneyShooter(x, y) {
+    this.x = x;
+    this.y = y;
+    this.w = bs;
+    this.h = bs;
+    this.shootTimer = 0;
+}
+
+moneyShooter.prototype.reset = function() {
+    this.shootTimer = 0;
+};
+
+moneyShooter.prototype.draw = function() {
+    noFill();
+    stroke(0);
+    strokeWeight(3);
+    ellipseMode(CORNER);
+    ellipse(this.x, this.y, this.w, this.w);
+    ellipseMode(CENTER);
+    fill(0, 255, 0);
+    arc(this.x + this.w/2, this.y + this.h/2, this.w, this.w, 0, (this.shootTimer * 360 / 150) * Math.PI / 180);
+};
+
 function Cannon(x, y) {
     this.x = x;
     this.y = y;
@@ -1096,14 +1163,24 @@ Cannon.prototype.reset = function() {
 
 Cannon.prototype.draw = function() {
     this.angle = atan2(this.y - player.y, this.x - player.x);
+    noStroke();
+    this.d = dist(this.x, this.y, player.x, player.y) / 2;
     pushMatrix();
-    translate(this.x, this.y);
+    translate(this.x + this.w/2, this.y + this.w/2);
     rotate(this.angle);
-    fill(90);
+
+        if (darkMode === "On") {
+           fill(90, 90, 90, 4000 / this.d - 20);
+        }
+        else {
+        fill(90);
+        }
     ellipse(0, 0, this.w, this.h);
     rect(-27, 0, this.w, 8);
     popMatrix();
 };
+
+var ms = [];
 
 var cannons = [];
 
@@ -1117,20 +1194,36 @@ function Block(x, y, s) {
 }
 Block.prototype.draw = function() {
     this.b += (20 - this.b)/20;
+    this.d = dist(this.x, this.y, player.x, player.y) / 2;
     switch (this.s) {
         default:
     noStroke();
+    if (darkMode === "On") {
+    fill(194, 161, 119, 4000 / this.d - 20);
+    }
+    else if (darkMode === "Off") {
     fill(194, 161, 119);
+    }
     rect(this.x, this.y, this.w, this.h);
     break;
         case 0:
             if (invisibleEnabled === "On") {
+            if (frameCount % 300 < 30) {
+            fill(0, 0, 0, 100);
+            }
+            else {
             noStroke();
             noFill();
             }
+            }
             else if (invisibleEnabled === "Off") {
             noStroke();
-            fill(0, 0, 0, 100);
+            if (darkMode === "On") {
+            fill(90, 90, 90, 4000 / this.d - 20);
+            }
+            else if (darkMode === "Off") {
+            fill(90, 90, 90, 100);
+            }
             }
             rect(this.x, this.y, this.w, this.h);
         break;
@@ -1166,8 +1259,14 @@ fallBlock.prototype.reset = function() {
 };
 
 fallBlock.prototype.draw = function() {
+    this.d = dist(this.x, this.y, player.x, player.y) / 2;
     noStroke();
+    if (darkMode === "On") {
+       fill(194, 161, 119, 4000 / this.d - 20);
+    }
+    else {
     fill(194, 161, 119);
+    }
     rect(this.x, this.y, this.w, this.h);
 };
 
@@ -1230,6 +1329,7 @@ function Water(x, y) {
 
     };
     this.draw = function() {
+
         fill(0, 100, 255, 150);
         rect(this.x, this.y, this.w, this.h);
 
@@ -1307,7 +1407,13 @@ function Trampoline(x, y) {
     this.h = bs;
     this.timer = 0;
     this.draw = function() {
+        this.d = dist(this.x, this.y, player.x, player.y) / 2;
+        if (darkMode === "On") {
+           fill(255, 0, 255, 4000 / this.d - 20);
+        }
+        else {
         fill(255, 0, 255);
+        }
         rect(this.x, this.y, this.w, this.h);
     };
     this.update = function() {
@@ -1339,7 +1445,13 @@ function Spike(x, y) {
     this.w = bs;
     this.h = bs;
     this.draw = function() {
+        this.d = dist(this.x, this.y, player.x, player.y) / 2;
+        if (darkMode === "On") {
+           fill(150, 150, 150, 4000 / this.d - 20);
+        }
+        else {
         fill(150);
+        }
         triangle(this.x, this.y + this.h, this.x + this.w, this.y + this.h, this.x + this.w/2, this.y);
     };
     this.update = function() {
@@ -1405,6 +1517,9 @@ function mapFill(map) {
             else if (m === "m") {
                 monsters.push(new monster(x * bs, y * bs));
             }
+            else if (m === "$") {
+                ms.push(new moneyShooter(x * bs, y * bs));
+            }
             else if (m === "a") {
                 monsters.push(new monster(x * bs, y * bs));
                 water.push(new Water(x * bs, y * bs));
@@ -1435,7 +1550,13 @@ function mapFill(map) {
 
 
 Portal.prototype.draw = function() {
-    fill(200 - sin(frameCount) * 55, 200 - cos(frameCount) * 55, 200 + sin(frameCount) * 55);
+    this.d = dist(this.x, this.y, player.x, player.y) / 2;
+        if (darkMode === "On") {
+           fill(200 - sin(frameCount) * 55, 200 - cos(frameCount) * 55, 200 + sin(frameCount) * 55, 4000 / this.d - 20);
+        }
+        else {
+        fill(200 - sin(frameCount) * 55, 200 - cos(frameCount) * 55, 200 + sin(frameCount) * 55);
+        }
     rect(this.x, this.y, this.w, this.h);
     if (rectCollide(player, this)) {
 
@@ -1605,9 +1726,20 @@ follower.prototype.draw = function() {
     this.angle = atan2(player.y - this.y, this.x - player.x);
     pushMatrix();
     translate(this.x, this.y);
-    fill(0, 150, 0);
+    this.d = dist(this.x, this.y, player.x, player.y) / 2;
+        if (darkMode === "On") {
+           fill(0, 150, 0, 4000 / this.d - 20);
+        }
+        else {
+        fill(0, 150, 0);
+        }
     rect(0, 0, this.w, this.h);
-    fill(255);
+    if (darkMode === "On") {
+           fill(255, 255, 255, 4000 / this.d - 20);
+        }
+        else {
+        fill(255);
+        }
     ellipse(this.w/2, this.h/2, this.w - 5, this.h - 5);
     popMatrix();
     pushMatrix();
@@ -1695,8 +1827,17 @@ follower.prototype.update = function() {
 Cannon.prototype.shoot = function() {
     this.angle = atan2(player.y + player.h/2 - this.y, player.x + player.w/2 - this.x);
     if (this.shootTimer > 50) {
-        bullets.push(new Bullet(this.x, this.y, 3 * cos(this.angle), 3 * sin(this.angle), "cannon"));
+        bullets.push(new Bullet(this.x + this.w/2, this.y + this.w/2, 3 * cos(this.angle), 3 * sin(this.angle), "cannon"));
         this.shootTimer = round(random(0, 10));
+    }
+    this.shootTimer++;
+};
+
+moneyShooter.prototype.shoot = function() {
+    this.theta = random(-Math.PI * 2, Math.PI * 2);
+    if (this.shootTimer > 150) {
+        bullets.push(new Bullet(this.x, this.y, 3 * cos(this.theta), 3 * sin(this.theta), "coin"));
+        this.shootTimer = round(random(0, 20));
     }
     this.shootTimer++;
 };
@@ -1704,7 +1845,13 @@ Cannon.prototype.shoot = function() {
 monster.prototype.draw = function() {
     pushMatrix();
     translate(this.x, this.y);
-    fill(0, 150, 60);
+   this.d = dist(this.x, this.y, player.x, player.y) / 2;
+        if (darkMode === "On") {
+           fill(0, 150, 60, 4000 / this.d - 20);
+        }
+        else {
+        fill(0, 150, 60);
+        }
     rect(0, 0, this.w, this.h, 3 * cos(frameCount) + 3);
     popMatrix();
 };
@@ -1879,7 +2026,12 @@ var toggleButtons = [
 ];
 
 function gameBackground() {
+    if (darkMode === "On") {
+        background(0, 0, 80);
+    }
+    else if (darkMode === "Off") {
     background(sliders.r - 200, sliders.g - 200, sliders.b - 200);
+    }
 }
 
 function load() {
@@ -2063,6 +2215,7 @@ function settingsScreen() {
     text("Show angle:", 100, 190);
     text("Can't see invisible\nblocks:", 100, 260);
     text("Show player\nposition:", 350, 120);
+    text("Dark mode:", 350, 200);
     textSize(30);
     if (Over(200, 100, 50, 50)) {
        fill(245);
@@ -2110,6 +2263,7 @@ function settingsScreen() {
        text("On", 225, 195);
     }
     if (Over(200, 240, 50, 50)) {
+
         fill(245);
        cursor(HAND);
        if (clicked) {
@@ -2149,6 +2303,34 @@ function settingsScreen() {
     rect(450, 100, 50, 50);
     fill(0);
     text(posEnabled, 475, 125);
+    if (Over(450, 180, 50, 50)) {
+        fill(225, 235, 245, 200);
+        rect(100, 100, 400, 400);
+        fill(0);
+        textSize(20);
+        text("Warning!\n\nAfter you passed level 1\nyou cannot untoggle it anymore!", 300, 300);
+        textSize(30);
+        fill(245);
+       cursor(HAND);
+       if (clicked) {
+           fill(185);
+           if (spaceCounts[2] <= 1) {
+           if (darkMode === "Off") {
+              darkMode = "On";
+           }
+           else if (darkMode === "On") {
+              darkMode = "Off";
+           }
+           }
+       }
+
+    }
+    else {
+          fill(255);
+       }
+    rect(450, 180, 50, 50);
+    fill(0);
+    text(darkMode, 475, 205);
     //Draw the sliders
     slider(200, 350, 255);
     slider(200, 380, 255);
@@ -2687,6 +2869,8 @@ function testScreen() {
                bullets.splice(i, 1);
             }
 
+
+
     }
     for (var i in player.bullets) {
         player.bullets[i].draw();
@@ -2787,6 +2971,7 @@ function levelSelect() {
     lvlButton(100, 150, 5, unlockedLevel[4]);
     lvlButton(200, 150, 6, unlockedLevel[5]);
     lvlButton(300, 150, 7, unlockedLevel[6]);
+    lvlButton(400, 150, 8, unlockedLevel[7]);
     fill(0);
     if (unlockedLevel[lvl]) {
     text("Level: " + (lvl + 1), 300, 420);
@@ -3003,7 +3188,7 @@ function beatAllLevels() {
     if (start2) {
     println("This is your score");
     println("If you are able to fit in the top 5, copy paste the thing down below to tips and thanks :P\n");
-     println("[\"" + Text.username.join("") + "\", " + player.deaths + ", " + money + "],");
+     println("[\"" + Text.username.join("") + "\", " + player.deaths + ", " + money + ", " + "\"" + darkMode + "\"" +  "],");
     start2 = false;
     }
     textSize(20);
@@ -3205,6 +3390,10 @@ function playScreen() {
             spaceCounts[i] = 20;
         }
     }
+    for (var i in ms) {
+        ms[i].draw();
+        ms[i].shoot();
+    }
     for (var i in cannons) {
         cannons[i].draw();
         cannons[i].shoot();
@@ -3229,10 +3418,20 @@ function playScreen() {
     for (var i in bullets) {
         bullets[i].draw();
         bullets[i].update();
+        if (bullets[i].type === "coin") {
+        if (circleCollide(bullets[i], player)) {
+            money += 5;
+            bullets[i].x = Infinity;
+            bullets.splice(i, 1);
+        }
+        }
+        else {
         if (bullets[i].x - 5 > player.x && bullets[i].x + 5 < player.x + player.w && bullets[i].y - 5 > player.y && bullets[i].y + 5 < player.y + player.h) {
             player.health -= (4 / upgrades[1].mult);
             bullets.splice(i, 1);
         }
+        }
+
 
     }
     for (var i in f) {
@@ -3282,6 +3481,9 @@ function playScreen() {
         player.health = 0;
         player.reset();
         bullets.splice(0, bullets.length);
+        for (var i in ms) {
+            ms[i].reset();
+        }
     }
     //Draw health bar
     fill(255, 0, 0);
