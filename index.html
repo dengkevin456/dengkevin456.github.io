@@ -3,7 +3,7 @@
 https://github.com/Team-Code/KA_Offline -->
 <html>
  <head>
-    <title>The land of hope</title>
+    <title>the land of hope</title>
 </head>
  <style>
      * {
@@ -47,7 +47,7 @@ https://github.com/Team-Code/KA_Offline -->
 **********/
 angleMode = degrees;
 
-
+//jshint ignore: start
 
 var screen = "load";
 smooth();
@@ -66,6 +66,7 @@ var x = 0;
 var y = 0;
 var shopTimer = 0;
 var gameTimer = 0;
+var cheat = 0;
 var money = 0;
 var pain = 0;
 var start2 = true;
@@ -85,6 +86,8 @@ var blockSelected = "b";
 var d = 180 / Math.PI;
 var frameCount = frameCount * 180 / Math.PI;
 var mouseIsPressed = false;
+var pointerLock = false;
+
 var testMap = [
     "",
     "",
@@ -185,9 +188,9 @@ var darkMode = "Off";
 
 
 var scores = [
-    ["Kevin", 3, 100],
-    ["Eric", 4, 526],
-    ["", 1, 141.7],
+    ["Kevin", 1, 274, "Off", 152.21212121212528],
+    ["Eric", 4, 526, "Off", 153.45698234019829],
+    ["Unknown", 1, 141.7, "Off", 145.0],
 
 ].sort(function (a, b) {
   return a[1] - b[1];
@@ -291,6 +294,75 @@ function slider(x, y, l) {
     line(x + l, y - 5, x + l, y + 5);
     strokeWeight(3);
 }
+
+var scopeOut = function(p) {
+  return function(){return this;}()[p];
+};
+
+var trans = {
+    s: 0,
+    tx: 0,
+    speed: 8,
+    fade: 0,
+    running: false,
+    to: null,
+};
+trans.run = function() {
+
+    if (trans.running) {
+        pushMatrix();
+        translate(0, 0);
+        noStroke();
+        fill(0, trans.fade);
+        rect(0, 0, 600, 600);
+        popMatrix();
+        if (screen !== trans.to) {
+            trans.fade += 5;
+
+        }
+        else{
+            trans.fade  -= 5;
+        }
+        if(trans.fade > 255) {
+            screen = trans.to;
+        }
+        if(trans.fade < 0){
+            trans.running = false;
+            trans.fade = 0;
+        }
+    }
+
+    /*
+    if (trans.running) {
+        pushMatrix();
+        translate(0, 0);
+        noStroke();
+        fill(0);
+        rect(0, 0, trans.s, 600);
+        rect(600, 0, -trans.s, 600);
+        fill(255);
+        textSize(30);
+        text("Enj", trans.tx, 300);
+        text("oy!", 600 - trans.tx, 300);
+        popMatrix();
+        if (screen !== trans.to) {
+            trans.s = lerp(trans.s, 300, 0.1);
+            trans.tx = lerp(trans.tx, 275, 0.1);
+        }
+        else{
+            trans.s = lerp(trans.s, 0, 0.1);
+            trans.tx = lerp(trans.tx, -60, 0.1);
+        }
+        if(trans.s >= 299) {
+            screen = trans.to;
+        }
+        if (trans.s <= 0) {
+            trans.running = false;
+        }
+
+    }
+    */
+};
 
 function objectButton(x, y, type, name) {
     strokeWeight(2);
@@ -948,6 +1020,30 @@ var gameMap = [
         "-----------------------------------------",
         "-----------------------------------------",
     ],
+    [
+        "------------------bbbb-------------------",
+        "------------------bbbb-------------------",
+        "------------------bbbb-------------------",
+        "------------------bbbb------$$$$$$-------",
+        "----------$$$-----bbbb------$$$$$$-------",
+        "----------$C$-----bbbb---bbbbbbbbbbbbbbbb",
+        "----------$$$-----bbbb-------------------",
+        "-@----------------bbbbi----------------p-",
+        "bbbb--------------bbbb------iiii---------",
+        "bwwwwwwwwwwwwwwwwwbbbbwwwwwwwwwwwwwwwwwwb",
+        "bwwwwwwwwwwwwwwwwwbbbbwwwwwwwwwwwwwwwwwwb",
+        "bwwwwwwwwwwwwwwwbbbbbbwwwwwwwwwwwwwwwwwwb",
+        "bwwwwwwwwwwwwbbbbbbbbbbbbbwwwwwwwwwwwwwwb",
+        "bwwwwwwwwwwwwbbbbbbbbbbbbbwwwwwwwwwwwwwwb",
+        "bwwwwwwwwwwwbbbbbbbbbbbbbbbwwwwwwwwwwwwwb",
+        "bwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwb",
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "-----------------------------------------",
+        "-----------------------------------------",
+        "-----------------------------------------",
+        "-----------------------------------------",
+        "-----------------------------------------",
+    ],
 ];
 
 var customMap = [
@@ -1199,7 +1295,7 @@ Block.prototype.draw = function() {
         default:
     noStroke();
     if (darkMode === "On") {
-    fill(194, 161, 119, 4000 / this.d - 20);
+    fill(194, 161, 119, 5000 / this.d - 20);
     }
     else if (darkMode === "Off") {
     fill(194, 161, 119);
@@ -1483,6 +1579,7 @@ function mapFill(map) {
     monsters = [];
     trampolines = [];
     fallblocks = [];
+    ms = [];
     spikes = [];
     for (var y in map) {
         for (var x in map[y]) {
@@ -1915,7 +2012,8 @@ function Button(x, y, w, label, nextScreen) {
             fill(245);
             cursor(HAND);
             if (clicked) {
-                screen = this.nextScreen;
+                trans.to = this.nextScreen;
+                trans.running = true;
             }
         }
         else {
@@ -2105,7 +2203,7 @@ function leaderboard() {
        fill(165);
        cursor(HAND);
        if (clicked) {
-          if (sortType < 1) {
+          if (sortType < 2) {
           sortType++;
           }
           else {
@@ -2126,6 +2224,9 @@ function leaderboard() {
     else if (sortType === 1) {
         text("Most\nmoney", 175, 225);
     }
+    else if (sortType === 2) {
+        text("Least\ntime", 175, 225);
+    }
     fill(150);
     for (var i = 0; i < 3; i++) {
         if (sortType === 0) {
@@ -2136,6 +2237,12 @@ function leaderboard() {
         scores.sort(function(a, b) { return (b[2] - a[2]); });
         text((i+1)+') '+scores[i][0]+' - '+scores[i][2] + "$",300,300+i*35,30);
         }
+
+        else if (sortType === 2) {
+            scores.sort(function(a, b) { return (a[4] - b[4]); });
+        text((i+1)+') '+scores[i][0]+' - '+scores[i][4] + "s",300,300+i*35,30);
+        }
+
     }
 
     textSize(30);
@@ -2268,11 +2375,13 @@ function settingsScreen() {
        cursor(HAND);
        if (clicked) {
            fill(185);
+           cheat = 1;
            if (invisibleEnabled === "Off") {
               invisibleEnabled = "On";
            }
            else if (invisibleEnabled === "On") {
               invisibleEnabled = "Off";
+
            }
        }
 
@@ -2972,6 +3081,7 @@ function levelSelect() {
     lvlButton(200, 150, 6, unlockedLevel[5]);
     lvlButton(300, 150, 7, unlockedLevel[6]);
     lvlButton(400, 150, 8, unlockedLevel[7]);
+    lvlButton(100, 250, 9, unlockedLevel[8]);
     fill(0);
     if (unlockedLevel[lvl]) {
     text("Level: " + (lvl + 1), 300, 420);
@@ -3186,9 +3296,7 @@ function beatAllLevels() {
     textSize(40);
     text("Congratulations!\nYou bet all normal levels!", 300, 50);
     if (start2) {
-    println("This is your score");
-    println("If you are able to fit in the top 5, copy paste the thing down below to tips and thanks :P\n");
-     println("[\"" + Text.username.join("") + "\", " + player.deaths + ", " + money + ", " + "\"" + darkMode + "\"" +  "],");
+     alert("This is your score\nIf you are able to fit in the\nleaderboard, copy it to T&T\n[\"" + Text.username.join("") + "\", " + player.deaths + ", " + money + ", " + "\"" + darkMode + "\"" + ", " + gameTimer + ", " + cheat + "],");
     start2 = false;
     }
     textSize(20);
@@ -3308,6 +3416,7 @@ function customLevelsScreen() {
         /*
         To understand more trig, here is an example
         y = a * sin(bx + c) + d
+
         a = amplitude aka the height of the waves
         b = period (wavelength)
         c = phase shift (translate x coordinate)
@@ -3333,6 +3442,7 @@ function customLevelsScreen() {
 
 function playScreen() {
     gameBackground();
+
     cam.x = ~~(lerp(cam.x, width/2 - player.x, 0.1));
     cam.y = ~~lerp(cam.y, height/2 - player.y, 0.1);
     cam.x = constrain(cam.x, gameMap[lvl][0].length* -1 * 30 + 600, 0);
@@ -3534,12 +3644,16 @@ function playScreen() {
     text("y: " + round(player.y), 500, 440);
     }
     textSize(30);
+    gameTimer += 1/(fps - 7);
+    fill(0);
+    text(round(gameTimer), 50, 100);
     buttons[5].draw();
 }
 
 function Game() {
     try {
     cursor(ARROW);
+
     textAlign(CENTER, CENTER);
     textFont(createFont("Verdana Bold"));
     ellipseMode(CENTER);
@@ -3619,11 +3733,12 @@ function Game() {
     if (screen === "levelSelect") {
         tip = tips[floor(random(tips.length))];
     }
+    trans.run();
     popUp.draw();
     clicked = false;
     }
     catch(e) {
-        println(e);
+        alert(e);
     }
 }
 
@@ -3798,9 +3913,10 @@ if (money !== 5) {
 }
 
     }};
-
     // Get the canvas that Processing-js will use
     var canvas = document.getElementById("mycanvas");
+    canvas.style.width = window.width;
+    canvas.style.height = window.height;
     // Pass the function sketchProc (defined in myCode.js) to Processing's constructor.
     var processingInstance = new Processing(canvas, sketchProc);
  </script>
